@@ -1,9 +1,12 @@
 import copy
 import json
 import scrapy
+from urllib.request import urlretrieve
+from investment_blog.settings import DOWNLOAD_FILE_PATH
+
 
 # bloomberg的请求header，其中cookie是必要的，必须有cookie才能访问api
-HEADER = {
+SEARCH_HEADER = {
     'authority': 'www.bloomberg.com',
     'accept': '*/*',
     'accept-language': 'en,zh-CN;q=0.9,zh;q=0.8',
@@ -19,6 +22,23 @@ HEADER = {
     'traceparent': '00-ab2b499424c2162404075030e60ff4b0-74c6c4aef91f2986-01',
     'tracestate': '25300@nr=0-1-1982697-140952798-74c6c4aef91f2986----1673430670654',
     'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+}
+
+IMAGE_HEADER = {
+    'authority': 'assets.bwbx.io',
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    'accept-language': 'en,zh-CN;q=0.9,zh;q=0.8',
+    'cache-control': 'max-age=0',
+    'sec-ch-ua': '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'document',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-site': 'none',
+    'sec-fetch-user': '?1',
+    'upgrade-insecure-requests': '1',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+
 }
 
 # 最大翻页数
@@ -39,12 +59,12 @@ class BloombergBlogSpider(scrapy.Spider):
 
     custom_settings = {
         'FEEDS': {
-            'file:Bloomberg_query.csv': {
+            'file:{path}/{name}'.format(path=DOWNLOAD_FILE_PATH, name="Bloomberg_query.csv"): {
                 'format': 'csv',
                 'encoding': 'utf8'
             }
         },
-        'CONCURRENT_REQUESTS': 16
+        'CONCURRENT_REQUESTS': 1
     }
 
     def start_requests(self):
@@ -59,7 +79,7 @@ class BloombergBlogSpider(scrapy.Spider):
             yield scrapy.FormRequest(url=self.url,
                                      formdata=params_dict,
                                      method="get",
-                                     headers=HEADER,
+                                     headers=SEARCH_HEADER,
                                      dont_filter=True,
                                      meta={"params_dict": params_dict})
             # break
@@ -79,20 +99,29 @@ class BloombergBlogSpider(scrapy.Spider):
         if not blog_list:
             return
 
+        # 在blog_dict里添加search_keyword，image_id，title_id等tag
         for blog_dict in blog_list:
+
             blog_dict["search_keyword"] = params_dict["query"]
             if blog_dict["thumbnail"] != "":
+                # 调用 下载图片到s3 的函数
                 blog_dict["image_id"] = blog_dict["thumbnail"].split('/')[6]
+                blog_dict["image_name"] = "./{name}.jpg".format(name=blog_dict["image_id"])
+                urlretrieve(blog_dict["thumbnail"], "{path}/{name}".format(path=DOWNLOAD_FILE_PATH,
+                                                                           name=blog_dict["image_name"]))
+
             blog_dict["title_id"] = blog_dict["url"].split('/')[-1]
             self.result_list.append(blog_dict)
+
             yield blog_dict
 
+        # 根据 MAX_PAGE 配置参数爬取下一页的内容
         if current_page < MAX_PAGE:
             params_dict["page"] = str(current_page + 1)
             yield scrapy.FormRequest(url=self.url,
                                      formdata=params_dict,
                                      method="get",
-                                     headers=HEADER,
+                                     headers=SEARCH_HEADER,
                                      dont_filter=True,
                                      callback=self.parse,
                                      meta={"params_dict": params_dict})

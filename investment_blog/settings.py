@@ -17,7 +17,9 @@ NEWSPIDER_MODULE = 'investment_blog.spiders'
 #USER_AGENT = 'investment_blog (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
+
+DOWNLOAD_FILE_PATH = "/Users/huhao/WorkFiles/python_program/investment_blog/investment_blog/download_file"
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
