@@ -10,7 +10,7 @@ class InsiderSpider(scrapy.Spider):
     name = 'insider'
     allowed_domains = ['insider.com']
     # python在params转化的时候会把 空格 符号转化为 + 符号，因此在此提前将空格改为网页默认编码 %20
-    keyword_list = ["investments%20advisor", "investment%20planning", "investment%20plan"]
+    keyword_list = ["investment plan", "investment planning", "investments advisor"]
     start_urls = ['https://www.insider.com/s']
     url = "https://www.insider.com/s"
     params_dict = {
@@ -27,11 +27,8 @@ class InsiderSpider(scrapy.Spider):
             # 深拷贝
             params_dict = copy.deepcopy(self.params_dict)
             params_dict["q"] = keyword
-            params_dict_string = urllib_parse.urlencode(params_dict)
-            # url = self.url + "?" + params_dict_string
-            url = "{url}?{params_dict_string}".format(url=self.url, params_dict_string=params_dict_string)
-            yield scrapy.FormRequest(url=url,
-                                     # formdata=params_dict,
+            yield scrapy.FormRequest(url=self.url,
+                                     formdata=params_dict,
                                      method="get",
                                      dont_filter=True)
             break
@@ -43,7 +40,6 @@ class InsiderSpider(scrapy.Spider):
         blog_url_re_rule = r'<img src=\"(.*?)"'  # 正则规则
         blog_url_list = re.findall(blog_url_re_rule, json_data['rendered'])
         print(blog_url_list)
-
 
 
 # 直接调用scrapy，适合本地开发环境使用
