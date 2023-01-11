@@ -25,8 +25,8 @@ HEADER = {
 MAX_PAGE = 5
 
 
-class BloombergSpider(scrapy.Spider):
-    name = 'bloomberg'
+class BloombergBlogSpider(scrapy.Spider):
+    name = 'bloomberg_blog'
     allowed_domains = ['bloomberg.com']
     start_urls = ['http://bloomberg.com/']
     keyword_list = ["investment plan", "investment planning", "investments advisor"]
@@ -48,6 +48,10 @@ class BloombergSpider(scrapy.Spider):
     }
 
     def start_requests(self):
+        """
+
+        :return:
+        """
         for keyword in self.keyword_list:
             # 深拷贝
             params_dict = copy.deepcopy(self.params_dict)
@@ -61,6 +65,11 @@ class BloombergSpider(scrapy.Spider):
             # break
 
     def parse(self, response):
+        """
+
+        :param response:
+        :return:
+        """
         params_dict = response.meta["params_dict"]
         current_page = int(params_dict["page"])
         json_data = json.loads(response.text)
