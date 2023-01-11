@@ -3,7 +3,7 @@ import copy
 import json
 import scrapy
 
-from urllib import parse as urllib_parse
+from lxml import etree
 
 
 class InsiderSpider(scrapy.Spider):
@@ -34,12 +34,19 @@ class InsiderSpider(scrapy.Spider):
             break
 
     def parse(self, response):
-        print(response.text)
-        json_data = json.loads(response.text)
         # print(response.text)
+        json_data = json.loads(response.text)
+        print(json_data)
+        # print(response.text)
+        # html = etree.HTML(json_data['rendered'])
+        # temdata = html.xpath("//div")
+        # print(temdata)
+
+        """
         blog_url_re_rule = r'<img src=\"(.*?)"'  # 正则规则
         blog_url_list = re.findall(blog_url_re_rule, json_data['rendered'])
         print(blog_url_list)
+        """
 
 
 # 直接调用scrapy，适合本地开发环境使用
