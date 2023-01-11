@@ -9,8 +9,9 @@ def csv_to_excel(csv_filename, excel_filename):
     :return:
     """
     df = pd.read_csv(csv_filename)
-    print(df.columns.to_list())
-    df.set_index("authors", inplace=True)
+    # print(df.columns.to_list())
+    df.drop_duplicates("url", inplace=True)
+    df.set_index(df.columns.to_list()[0], inplace=True)
     df.to_excel(excel_filename)
 
 

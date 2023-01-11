@@ -81,6 +81,9 @@ class BloombergBlogSpider(scrapy.Spider):
 
         for blog_dict in blog_list:
             blog_dict["search_keyword"] = params_dict["query"]
+            if blog_dict["thumbnail"] != "":
+                blog_dict["image_id"] = blog_dict["thumbnail"].split('/')[6]
+            blog_dict["title_id"] = blog_dict["url"].split('/')[-1]
             self.result_list.append(blog_dict)
             yield blog_dict
 
@@ -99,5 +102,5 @@ class BloombergBlogSpider(scrapy.Spider):
 if __name__ == '__main__':
     from scrapy import cmdline
 
-    args = "scrapy crawl bloomberg".split()
+    args = "scrapy crawl bloomberg_blog".split()
     cmdline.execute(args)
