@@ -12,6 +12,8 @@ BOT_NAME = 'investment_blog'
 SPIDER_MODULES = ['investment_blog.spiders']
 NEWSPIDER_MODULE = 'investment_blog.spiders'
 
+DOWNLOAD_MAXSIZE = 1073741824
+
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'investment_blog (+http://www.yourdomain.com)'

@@ -28,7 +28,10 @@ class MyFilesPipeline(FilesPipeline):
         if 'file_urls' not in item:
             return
         file_url = item['file_urls']
-        meta = {'filename': item['name']}
+        meta = {'filename': item['name'],
+                'download_maxsize': 1073741824,
+                'download_warnsize': 1073741824,
+                'download_timeout': 1000}
         yield scrapy.Request(url=file_url, meta=meta)
 
     def file_path(self, request, response=None, info=None):

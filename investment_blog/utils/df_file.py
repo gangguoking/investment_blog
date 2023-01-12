@@ -16,5 +16,5 @@ def csv_to_excel(csv_filename, excel_filename):
 
 
 if __name__ == '__main__':
-    csv_to_excel(csv_filename="../spiders/Bloomberg_query.csv",
-                 excel_filename="../spiders/Bloomberg_query.xlsx")
+    csv_to_excel(csv_filename="../download_file/Bloomberg_query.csv",
+                 excel_filename="../download_file/Bloomberg_query.xlsx")
