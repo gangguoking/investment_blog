@@ -3,8 +3,8 @@
 import copy
 import json
 import scrapy
-from urllib.request import urlretrieve
 from investment_blog.settings import DOWNLOAD_FILE_PATH
+from investment_blog.items import DownloadFilesItem
 
 # bloomberg的请求header，其中cookie是必要的，必须有cookie才能访问api
 SEARCH_HEADER = {
@@ -26,7 +26,7 @@ SEARCH_HEADER = {
 }
 
 # 最大翻页数
-MAX_PAGE = 5
+MAX_PAGE = 1
 
 
 class BloombergBlogSpider(scrapy.Spider):
@@ -48,7 +48,11 @@ class BloombergBlogSpider(scrapy.Spider):
                 'encoding': 'utf8'
             }
         },
-        'CONCURRENT_REQUESTS': 16
+        'ITEM_PIPELINES': {
+            # 'scrapy.pipelines.files.FilesPipeline': 300,
+            'investment_blog.pipelines.MyFilesPipeline': 500,
+        },
+        'CONCURRENT_REQUESTS': 16,
     }
 
     def start_requests(self):
@@ -66,7 +70,7 @@ class BloombergBlogSpider(scrapy.Spider):
                                      headers=SEARCH_HEADER,
                                      dont_filter=True,
                                      meta={"params_dict": params_dict})
-            # break
+            break
 
     def parse(self, response):
         """
@@ -91,8 +95,13 @@ class BloombergBlogSpider(scrapy.Spider):
                 # 调用 下载图片到s3 的函数
                 blog_dict["image_id"] = blog_dict["thumbnail"].split('/')[6]
                 blog_dict["image_name"] = "./{name}.jpg".format(name=blog_dict["image_id"])
-                urlretrieve(blog_dict["thumbnail"], "{path}/bloomberg_jpg/{name}".format(path=DOWNLOAD_FILE_PATH,
-                                                                                         name=blog_dict["image_name"]))
+
+                # 下载图片文件
+                files_item = DownloadFilesItem()
+                files_item['file_urls'] = blog_dict["thumbnail"]
+                files_item['name'] = "bloomberg_jpg/{name}".format(path=DOWNLOAD_FILE_PATH,
+                                                                   name=blog_dict["image_name"])
+                yield files_item
 
             blog_dict["title_id"] = blog_dict["url"].split('/')[-1]
             self.result_list.append(blog_dict)

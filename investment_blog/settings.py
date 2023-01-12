@@ -20,6 +20,7 @@ NEWSPIDER_MODULE = 'investment_blog.spiders'
 ROBOTSTXT_OBEY = False
 
 DOWNLOAD_FILE_PATH = "/Users/huhao/WorkFiles/python_program/investment_blog/investment_blog/download_file"
+FILES_STORE = "/Users/huhao/WorkFiles/python_program/investment_blog/investment_blog/download_file/images"
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
