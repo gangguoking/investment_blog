@@ -12,16 +12,21 @@ BOT_NAME = 'investment_blog'
 SPIDER_MODULES = ['investment_blog.spiders']
 NEWSPIDER_MODULE = 'investment_blog.spiders'
 
+# 文件最大的下载大小
 DOWNLOAD_MAXSIZE = 1073741824
-
-
-# Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'investment_blog (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
 
+# 文件存储的地址
 FILES_STORE = "/Users/huhao/WorkFiles/python_program/investment_blog/investment_blog/download_file/"
+
+# 如果 你需要 使用到 s3，请 安装s3fs ，挂载s3到本地
+# FILES_STORE = "s3://bucket/s3_images"
+
+
+# Crawl responsibly by identifying yourself (and your website) on the user-agent
+#USER_AGENT = 'investment_blog (+http://www.yourdomain.com)'
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
