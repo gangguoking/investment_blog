@@ -44,6 +44,8 @@ class BloombergBlogSpider(scrapy.Spider):
     custom_settings = {
         'FEED_EXPORT_FIELDS': ["authors", "eyebrow", "headline", "publishedAt", "subtype", "summary", "thumbnail",
                                "type", "url", "search_keyword", "image_id", "image_name", "title_id"],
+        'FEED_EXPORTERS': {
+            'csv': 'investment_blog.pipelines.BloombergCsvItemExporter'},
         'FEEDS': {
             'file:{path}/{name}'.format(path=FILES_STORE, name="Bloomberg_query.csv"): {
                 'format': 'csv',
@@ -51,7 +53,6 @@ class BloombergBlogSpider(scrapy.Spider):
             }
         },
         'ITEM_PIPELINES': {
-            # 'scrapy.pipelines.files.FilesPipeline': 300,
             'investment_blog.pipelines.MyFilesPipeline': 1,
         },
         'CONCURRENT_REQUESTS': 16,
