@@ -3,7 +3,7 @@
 import copy
 import json
 import scrapy
-from investment_blog.settings import DOWNLOAD_FILE_PATH
+from investment_blog.settings import FILES_STORE
 from investment_blog.items import DownloadFilesItem
 
 # bloomberg的请求header，其中cookie是必要的，必须有cookie才能访问api
@@ -42,15 +42,17 @@ class BloombergBlogSpider(scrapy.Spider):
     result_list = []
 
     custom_settings = {
+        'FEED_EXPORT_FIELDS': ["authors", "eyebrow", "headline", "publishedAt", "subtype", "summary", "thumbnail",
+                               "type", "url", "search_keyword", "image_id", "image_name", "title_id"],
         'FEEDS': {
-            'file:{path}/{name}'.format(path=DOWNLOAD_FILE_PATH, name="Bloomberg_query.csv"): {
+            'file:{path}/{name}'.format(path=FILES_STORE, name="Bloomberg_query.csv"): {
                 'format': 'csv',
                 'encoding': 'utf8'
             }
         },
         'ITEM_PIPELINES': {
             # 'scrapy.pipelines.files.FilesPipeline': 300,
-            'investment_blog.pipelines.MyFilesPipeline': 500,
+            'investment_blog.pipelines.MyFilesPipeline': 1,
         },
         'CONCURRENT_REQUESTS': 16,
     }
@@ -99,7 +101,7 @@ class BloombergBlogSpider(scrapy.Spider):
                 # 下载图片文件
                 files_item = DownloadFilesItem()
                 files_item['file_urls'] = blog_dict["thumbnail"]
-                files_item['name'] = "bloomberg_jpg/{name}".format(path=DOWNLOAD_FILE_PATH,
+                files_item['name'] = "bloomberg_jpg/{name}".format(path=FILES_STORE,
                                                                    name=blog_dict["image_name"])
                 yield files_item
 
