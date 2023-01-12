@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
 
+import re
 import copy
 import json
 import scrapy
 from investment_blog.settings import FILES_STORE
 from investment_blog.items import DownloadFilesItem
+
+# 默认video的size大小，列表中的元素值越大，视频大小越大
+VIDEO_SIZE_LIST = ['64', '150', '400', '600', '800', '1200', '2400', '3000', '5000']
+
+# 下载video的大小参数，如果选择的大，则应该调大 scrapy的 DOWNLOAD_TIMEOUT 参数
+VIDEO_SIZE = '150'
+
 
 # bloomberg的请求header，其中cookie是必要的，必须有cookie才能访问api
 SEARCH_HEADER = {
@@ -43,7 +51,7 @@ class BloombergBlogSpider(scrapy.Spider):
 
     custom_settings = {
         'FEED_EXPORT_FIELDS': ["authors", "eyebrow", "headline", "publishedAt", "subtype", "summary", "thumbnail",
-                               "type", "url", "search_keyword", "image_id", "image_name", "title_id"],
+                               "type", "url", "search_keyword", "image_id", "image_name", "title_id", "video_name"],
         'FEED_EXPORTERS': {
             'csv': 'investment_blog.pipelines.BloombergCsvItemExporter'},
         'FEEDS': {
@@ -53,9 +61,10 @@ class BloombergBlogSpider(scrapy.Spider):
             }
         },
         'ITEM_PIPELINES': {
-            'investment_blog.pipelines.MyFilesPipeline': 1,
+            'investment_blog.pipelines.MyFilesPipeline': 300,
         },
         'CONCURRENT_REQUESTS': 16,
+        'DOWNLOAD_TIMEOUT': 180,
     }
 
     def start_requests(self):
@@ -97,7 +106,7 @@ class BloombergBlogSpider(scrapy.Spider):
             if blog_dict["thumbnail"] != "":
                 # 调用 下载图片到s3 的函数
                 blog_dict["image_id"] = blog_dict["thumbnail"].split('/')[6]
-                blog_dict["image_name"] = "./{name}.jpg".format(name=blog_dict["image_id"])
+                blog_dict["image_name"] = "{name}.jpg".format(name=blog_dict["image_id"])
 
                 # 下载图片文件
                 files_item = DownloadFilesItem()
@@ -109,7 +118,15 @@ class BloombergBlogSpider(scrapy.Spider):
             blog_dict["title_id"] = blog_dict["url"].split('/')[-1]
             self.result_list.append(blog_dict)
 
-            yield blog_dict
+            if blog_dict["subtype"] == "Video":
+                yield scrapy.Request(url=blog_dict["url"],
+                                     method="get",
+                                     headers=SEARCH_HEADER,
+                                     dont_filter=True,
+                                     callback=self.parse_video_resource_id,
+                                     meta={"blog_dict": blog_dict})
+            else:
+                yield blog_dict
 
         # 根据 MAX_PAGE 配置参数爬取下一页的内容
         if current_page < MAX_PAGE:
@@ -121,6 +138,44 @@ class BloombergBlogSpider(scrapy.Spider):
                                      dont_filter=True,
                                      callback=self.parse,
                                      meta={"params_dict": params_dict})
+
+    def parse_video_resource_id(self, response):
+        """
+        解析出网页 resourceId 参数
+        :return:
+        """
+        blog_dict = response.meta["blog_dict"]
+        re_rule = r'"resourceId":"(.*?)"'  # 正则规则
+        result_list = re.findall(re_rule, response.text)
+        if result_list:
+            resource_id = result_list[0]
+            blog_dict["video_name"] = "{resource_id}.mp4".format(resource_id=resource_id)
+
+            url = "https://www.bloomberg.com/media-manifest/embed?id={resource_id}".format(resource_id=resource_id)
+
+            yield scrapy.Request(url=url,
+                                 method="get",
+                                 headers=SEARCH_HEADER,
+                                 dont_filter=True,
+                                 callback=self.parse_download_video,
+                                 meta={"blog_dict": blog_dict})
+
+    def parse_download_video(self, response):
+        """
+        下载视频
+        :param response:
+        :return:
+        """
+        blog_dict = response.meta["blog_dict"]
+        json_data = json.loads(response.text)
+        download_url = json_data['downloadURLs'][VIDEO_SIZE]
+
+        # 下载图片文件
+        files_item = DownloadFilesItem()
+        files_item['file_urls'] = download_url
+        files_item['name'] = "bloomberg_video/{name}".format(name=blog_dict['video_name'])
+        yield files_item
+        yield blog_dict
 
 
 # 直接调用scrapy，适合本地开发环境使用
