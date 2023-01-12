@@ -4,7 +4,6 @@ import scrapy
 from urllib.request import urlretrieve
 from investment_blog.settings import DOWNLOAD_FILE_PATH
 
-
 # bloomberg的请求header，其中cookie是必要的，必须有cookie才能访问api
 SEARCH_HEADER = {
     'authority': 'www.bloomberg.com',
@@ -64,7 +63,7 @@ class BloombergBlogSpider(scrapy.Spider):
                 'encoding': 'utf8'
             }
         },
-        'CONCURRENT_REQUESTS': 1
+        'CONCURRENT_REQUESTS': 16
     }
 
     def start_requests(self):
@@ -107,8 +106,8 @@ class BloombergBlogSpider(scrapy.Spider):
                 # 调用 下载图片到s3 的函数
                 blog_dict["image_id"] = blog_dict["thumbnail"].split('/')[6]
                 blog_dict["image_name"] = "./{name}.jpg".format(name=blog_dict["image_id"])
-                urlretrieve(blog_dict["thumbnail"], "{path}/{name}".format(path=DOWNLOAD_FILE_PATH,
-                                                                           name=blog_dict["image_name"]))
+                urlretrieve(blog_dict["thumbnail"], "{path}/bloomberg_jpg/{name}".format(path=DOWNLOAD_FILE_PATH,
+                                                                                         name=blog_dict["image_name"]))
 
             blog_dict["title_id"] = blog_dict["url"].split('/')[-1]
             self.result_list.append(blog_dict)
