@@ -6,6 +6,7 @@ import json
 
 import requests
 import scrapy
+import logging
 from investment_blog.settings import FILES_STORE
 from investment_blog.items import DownloadFilesItem
 
@@ -119,6 +120,9 @@ class BloombergBlogSpider(scrapy.Spider):
                 files_item['file_urls'] = blog_dict["thumbnail"]
                 files_item['name'] = "bloomberg_jpg/{name}".format(path=FILES_STORE,
                                                                    name=blog_dict["image_name"])
+
+                logging.info("download_image done    name:{name}     audio_url:{file_urls}"
+                             "".format(name=files_item['name'], file_urls=files_item['file_urls']))
                 yield files_item
 
             blog_dict["title_id"] = blog_dict["url"].split('/')[-1]
@@ -190,6 +194,8 @@ class BloombergBlogSpider(scrapy.Spider):
         files_item['name'] = "bloomberg_video/{name}".format(name=blog_dict['video_name'])
         yield files_item
         yield blog_dict
+        logging.info("download_video done    name:{name}     audio_url:{file_urls}"
+                     "".format(name=files_item['name'], file_urls=files_item['file_urls']))
 
     def parse_download_audio(self, response):
         blog_dict = response.meta["blog_dict"]
@@ -207,6 +213,8 @@ class BloombergBlogSpider(scrapy.Spider):
             files_item['name'] = "bloomberg_audio/{name}".format(name=blog_dict['audio_name'])
             yield files_item
             yield blog_dict
+            logging.info("download_audio done    name:{name}     audio_url:{file_urls}"
+                         "".format(name=files_item['name'], file_urls=files_item['file_urls']))
 
 
 # 直接调用scrapy，适合本地开发环境使用
