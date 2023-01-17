@@ -22,6 +22,7 @@ class InvestmentBlogPipeline:
         return item
 
 
+# 自己定制化下载文件的pipelines
 class MyFilesPipeline(FilesPipeline):
 
     def get_media_requests(self, item, info):
@@ -38,6 +39,7 @@ class MyFilesPipeline(FilesPipeline):
         return request.meta.get('filename', '')
 
 
+# 定制化csv存储，必须需要有 url 这个字典 tag 才能写到csv
 class BloombergCsvItemExporter(BaseItemExporter):
 
     def __init__(self, file, include_headers_line=True, join_multivalued=',', errors=None, **kwargs):
@@ -74,9 +76,11 @@ class BloombergCsvItemExporter(BaseItemExporter):
             self._headers_not_written = False
             self._write_headers_and_set_fields_to_export(item)
 
+        # 必须得有 url 这个tag才能写，否则return
         if 'url' not in item:
             return
 
+        # url 值为空也return
         if item['url'] == '' or item['url'] is None:
             return
 
