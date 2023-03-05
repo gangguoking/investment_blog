@@ -1,0 +1,8 @@
+/build/
+/project.egg-info/
+/scrapy-admin-pro/
+/scrapyd/
+/venv/
+/setup.py
+/tem.py
+/investment_blog/download_file/
